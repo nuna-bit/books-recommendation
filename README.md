@@ -1,28 +1,50 @@
 # Books Recommendation 📚
+## Project overview 
 
-A personal data science and machine learning project that analyzes my historical reading data and ranks my "Wishlist" so I know exactly what book to pick up next!
+This repository contains a Python-based recommendation engine designed to analyze personal reading data and generate high-relevance book suggestions. The project documents an iterative development process, moving from a local similarity-based model to a dynamic hybrid system that integrates external data via a REST API.
 
-## How it Works
+## Technical implementation
+### Phase 1: Local similarity-based model
+The initial version of the engine utilized **content-based filtering** to map relationships between established reading history and a target wishlist.
+- **Vectorization (TF-IDF)**: I used TfidfVectorizer to transform a *"metadata soup"* (concatenated author and genre strings) into a numerical feature space. This method uses **term frequency-inverse document frequency** to weight unique identifiers more heavily than common terms.
+- **Similarity Mapping**: To determine the "distance" between books, I implemented **cosine similarity**. By calculating the cosine of the angle between two vectors, the model identifies books with the most similar metadata profiles.
+- **Engineering Challenge**: While effective for known datasets, this approach was limited by the *"filter bubble"* effect—it could not suggest titles outside the existing CSV records
 
-This project uses a **content-based filtering** recommendation system powered by natural language processing (NLP). Here is a breakdown of the pipeline and the machine learning models I used:
+### Phase 2: Hybrid integration via Google Books API
+To achieve true discovery and solve the "cold start" problem for small datasets, the architecture was upgraded to a *hybrid system*.
+- **Dynamic profiling**: The system parses historical logs (2023–2026) to identify "high-affinity" features based on weighted user ratings (4 and 5-star filtered events).
+- **External data fetching**: I integrated the **Google Books REST API** to query a global database using these high-affinity parameters.
+- **Data integrity & deduplication**: To ensure recommendation quality, I implemented a filtering layer using Python `sets` that cross-references API results against the entire local history to prevent duplicate suggestions.
 
-### 1. Data collection & preprocessing
-- The starting data includes CSV files of my reading history spanning multiple years, complete with my personal star ratings
-- A "wishlist" CSV acts as the pool of candidates for recommendation
+## Key Features
+- **Preprocessing pipeline**: Automated cleaning of multi-year CSV files, including the conversion of UTF-8 star emojis into a numerical format for analysis.
+- **Language-agnostic matching**: The feature engineering process is designed to handle diverse scripts (e.g., korean, japanese, and latin) by focusing on metadata commonalities.
+- **Modular architecture**: The codebase is separated into logical modules for data ingestion, mathematical modeling, and API communication.
 
-### 2. Text feature scraping (Google Books API)
-- Titles alone aren't enough to capture the true identity of a book. The pipeline queries the **Google Books API** to dynamically fetch rich text descriptions and genre categories for every book in my dataset.
+## Tech Stack
+- Language: Python
+- Data Analysis: `pandas`
+- Machine Learning: `scikit-learn` (`TfidfVectorizer`, `cosine_similarity`)
+- Network: `requests` (REST API Integration)
 
-### 3. The machine learning model: TF-IDF and cosine similarity
-- **TF-IDF vectorization (`scikit-learn`)**: To understand the text, the system uses a `TfidfVectorizer`. This converts the long text descriptions into high-dimensional numerical embeddings, identifying important identifying keywords and naturally filtering out common stop-words.
-- **User profiling**: The algorithm then mathematically summarizes my taste by creating a personalized "user profile" vector. This is calculated by taking a weighted average of the TF-IDF vectors from my read books, heavily weighing the vectors of books I rated 4 or 5 stars.
-- **Cosine similarity ranking**: Finally, the model calculates the **cosine similarity** between my aggregated user profile and every unread book in my wishlist. 
+## How to use
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/your-username/book-discovery-ml.git](https://github.com/your-username/book-discovery-ml.git)
+   cd book-discovery-ml
 
-The final output is a ranked list of books from my wishlist that mathematically align with my reading preferences, based purely on their narrative and thematic content!
+2. Install Dependencies:
+``` Bash
+    pip install pandas scikit-learn requests
+```
+3. Data Configuration:
+Ensure your local environment contains your reading history and wishlist files in the root directory:
+- `books_2023.csv`, `books_2024.csv`, etc.
+- `Book_wishlist.csv`
 
-## 🛠️ Tech Stack & Libraries
-- **Language:** Python
-- **Environment:** Jupyter Notebooks
-- **Data Manipulation:** `pandas`, `numpy`
-- **Machine Learning:** `scikit-learn`
-- **Integrations:** `urllib`, Google Books API
+> Note: Personal CSV files are excluded from version control via .gitignore to maintain data privacy.
+
+4. Run the Engine:
+Execute the main script to process your data and fetch real-time recommendations from the Google Books API:
+``` Bash
+    python main.py
